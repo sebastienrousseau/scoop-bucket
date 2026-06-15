@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/ScoopInstaller/Scoop/master/schema.json",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "Official command-line client for CloudCDN — full control plane in a single zero-dep Node ≥ 20 ES module.",
   "homepage": "https://github.com/sebastienrousseau/stratos",
   "license": "MIT",
@@ -11,8 +11,8 @@
   ],
   "architecture": {
     "64bit": {
-      "url": "https://github.com/sebastienrousseau/stratos/releases/download/v0.0.20/stratos-win-x64.exe#/stratos.exe",
-      "hash": "e0b9cbabf1101afaa1fb4a39408ac519430ead785560e3cc029fca8b668bfca7",
+      "url": "https://github.com/sebastienrousseau/stratos/releases/download/v0.0.21/stratos-win-x64.exe#/stratos.exe",
+      "hash": "d2e7fab992c4f27bd6953e93d7cc3e5e0cea544db9e01894553a06585c6dfb15",
       "bin": "stratos.exe"
     }
   },
