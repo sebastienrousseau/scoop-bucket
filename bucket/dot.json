@@ -1,5 +1,5 @@
 {
-  "version": "0.2.522",
+  "version": "0.2.536",
   "description": "Declarative dotfiles CLI for macOS, Linux, WSL, and PowerShell.",
   "homepage": "https://github.com/sebastienrousseau/dotfiles",
   "license": "MIT",
@@ -12,14 +12,14 @@
   },
   "architecture": {
     "64bit": {
-      "url": "https://github.com/sebastienrousseau/dotfiles/releases/download/v0.2.522/dot-0.2.522.zip",
-      "hash": "sha256:a611a2dda58eb60739fc0d6702fdde5bbb8582bfe339384aa66e2f3f4c8874d4",
-      "extract_dir": "dot-0.2.522"
+      "url": "https://github.com/sebastienrousseau/dotfiles/releases/download/v0.2.536/dot-0.2.536.zip",
+      "hash": "sha256:4d0c490b8eace9bf59167bc7807cfcf4f432c1972088f6ca2c8b095984b771ed",
+      "extract_dir": "dot-0.2.536"
     },
     "arm64": {
-      "url": "https://github.com/sebastienrousseau/dotfiles/releases/download/v0.2.522/dot-0.2.522.zip",
-      "hash": "sha256:a611a2dda58eb60739fc0d6702fdde5bbb8582bfe339384aa66e2f3f4c8874d4",
-      "extract_dir": "dot-0.2.522"
+      "url": "https://github.com/sebastienrousseau/dotfiles/releases/download/v0.2.536/dot-0.2.536.zip",
+      "hash": "sha256:4d0c490b8eace9bf59167bc7807cfcf4f432c1972088f6ca2c8b095984b771ed",
+      "extract_dir": "dot-0.2.536"
     }
   },
   "bin": [
