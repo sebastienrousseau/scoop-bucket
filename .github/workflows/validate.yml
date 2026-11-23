@@ -42,7 +42,9 @@ jobs:
           }
           foreach ($m in $changed | Where-Object { $_ -like '*.json' -and (Test-Path $_) }) {
             Write-Host "== $m"
-            scoop install $m
+            # A bare bucket/x.json reads as <bucket>/<app>; a full path is a
+            # manifest file.
+            scoop install (Resolve-Path $m).Path
             if ($LASTEXITCODE -ne 0) { throw "scoop install $m failed" }
             $name = [IO.Path]::GetFileNameWithoutExtension($m)
             if ($name -eq 'askiso') {
