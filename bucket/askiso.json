@@ -1,5 +1,5 @@
 {
-    "version": "0.0.6",
+    "version": "0.0.8",
     "description": "ISO 20022 reference tooling for the terminal, an editor and an AI assistant",
     "homepage": "https://askiso.io/",
     "license": "Apache-2.0|MIT",
@@ -10,12 +10,12 @@
     ],
     "architecture": {
         "64bit": {
-            "url": "https://github.com/sebastienrousseau/askiso/releases/download/v0.0.6/askiso_0.0.6_windows_amd64.zip",
-            "hash": "caab93a24a4b004bc88c309f6881adb44e5cfa9e42e00bbd69d843b5090015f9"
+            "url": "https://github.com/sebastienrousseau/askiso/releases/download/v0.0.8/askiso_0.0.8_windows_amd64.zip",
+            "hash": "6ca1ca38bbdab758122c37c93a18677561ad9efec92de2ac202df3a39f3198b5"
         },
         "arm64": {
-            "url": "https://github.com/sebastienrousseau/askiso/releases/download/v0.0.6/askiso_0.0.6_windows_arm64.zip",
-            "hash": "dbcbc8542711586b9e315dc75877316c22c1dd13aecba092729d6222b82f81bb"
+            "url": "https://github.com/sebastienrousseau/askiso/releases/download/v0.0.8/askiso_0.0.8_windows_arm64.zip",
+            "hash": "f5b08cb3c0b53d09c3457941932075c1a0f2484aecd6edf3c7d9b4f88b86019a"
         }
     },
     "bin": ["askiso.exe", "askiso-mcp.exe", "askiso-lsp.exe", "askiso-server.exe"],
