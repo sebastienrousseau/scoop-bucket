@@ -1,0 +1,111 @@
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
+# SPDX-License-Identifier: MIT OR Apache-2.0
+name: bump-askiso
+
+# Keeps bucket/askiso.json on the latest github.com/sebastienrousseau/askiso
+# release. Polls daily (no cross-repo token needed); can also be run on demand or
+# triggered by a repository_dispatch of type "askiso-release".
+#
+# The commit is made through the contents API, so GitHub signs it and main's
+# signed-commit rule holds without a key in this repository. A pull request
+# opened with this token does not start other workflows, so the new manifest
+# is installed and run here, before the merge.
+on:
+  schedule:
+    - cron: "15 6 * * *"
+  workflow_dispatch:
+  repository_dispatch:
+    types: [askiso-release]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Update the manifest to the latest release
+        id: update
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$(gh release view --repo sebastienrousseau/askiso --json tagName -q .tagName)"
+          ver="${tag#v}"
+          gh release download "$tag" --repo sebastienrousseau/askiso \
+            --pattern checksums.txt --dir "$RUNNER_TEMP" --clobber
+          VER="$ver" SUMS="$RUNNER_TEMP/checksums.txt" python - <<'PY'
+          import os, re
+          ver, sums = os.environ["VER"], os.environ["SUMS"]
+          shas = dict(reversed(line.split()) for line in open(sums) if line.strip())
+          path = "bucket/askiso.json"
+          text = open(path, encoding="utf-8").read()
+          old = re.search(r'"version": "([^"]+)"', text).group(1)
+          for arch in ("amd64", "arm64"):
+              name = f"askiso_{ver}_windows_{arch}.zip"
+              if name not in shas:
+                  raise SystemExit(f"missing a checksum for {name}")
+              text = re.sub(
+                  rf'(releases/download/v)[^/]+(/askiso_)[^_]+(_windows_{arch}\.zip",\s*"hash": ")[0-9a-f]+',
+                  rf"\g<1>{ver}\g<2>{ver}\g<3>{shas[name]}", text)
+          text = text.replace(f'"version": "{old}"', f'"version": "{ver}"', 1)
+          open(path, "w", encoding="utf-8", newline="\n").write(text)
+          PY
+          if git diff --quiet -- bucket/askiso.json; then
+            echo "bucket/askiso.json is already correct for $ver; nothing to do."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git diff -- bucket/askiso.json
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+
+      - name: Install and run the updated manifest
+        if: steps.update.outputs.changed == 'true'
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.update.outputs.version }}
+        run: |
+          Invoke-RestMethod -Uri https://get.scoop.sh -OutFile install.ps1
+          .\install.ps1 -RunAsAdmin
+          $Env:PATH = (Join-Path $HOME 'scoop\shims') + ';' + $Env:PATH
+          scoop install .\bucket\askiso.json
+          if ($LASTEXITCODE -ne 0) { throw 'scoop install failed' }
+          foreach ($b in 'askiso-server', 'askiso-mcp', 'askiso-lsp') {
+            $got = & $b -version
+            if ($got -ne "$b $Env:VERSION") { throw "$b reported '$got'" }
+            Write-Host "ok $got"
+          }
+
+      - name: Commit through the API and merge
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.update.outputs.version }}
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          branch="automation/askiso-v${VERSION}"
+          if gh pr list --repo "$repo" --head "$branch" --state open --json number --jq 'length > 0' | grep -q true; then
+            echo "An updater pull request for $VERSION is already open."
+            exit 0
+          fi
+          base="$(gh api "repos/$repo/git/ref/heads/main" --jq .object.sha)"
+          gh api "repos/$repo/git/refs" -f ref="refs/heads/$branch" -f sha="$base" >/dev/null
+          blob="$(gh api "repos/$repo/contents/bucket/askiso.json?ref=main" --jq .sha)"
+          content="$(base64 -w0 bucket/askiso.json)"
+          gh api -X PUT "repos/$repo/contents/bucket/askiso.json" \
+            -f message="askiso: bump to $VERSION" -f content="$content" \
+            -f sha="$blob" -f branch="$branch" >/dev/null
+          pr="$(gh pr create --repo "$repo" --base main --head "$branch" \
+            --title "askiso: bump to $VERSION" \
+            --body "Automated manifest update for askiso v$VERSION. Installed and run on Windows before the merge.")"
+          gh pr merge "$pr" --squash --delete-branch

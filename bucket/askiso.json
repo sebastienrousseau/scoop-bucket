@@ -1,0 +1,30 @@
+{
+    "version": "0.0.6",
+    "description": "ISO 20022 reference tooling for the terminal, an editor and an AI assistant",
+    "homepage": "https://askiso.io/",
+    "license": "Apache-2.0|MIT",
+    "notes": [
+        "AskISO ships no ISO 20022 specification content. Download the message sets",
+        "you need from https://www.iso20022.org/ then run: askiso catalog add <downloaded.zip>",
+        "Search, lint, generate and MT translation work without any download."
+    ],
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/sebastienrousseau/askiso/releases/download/v0.0.6/askiso_0.0.6_windows_amd64.zip",
+            "hash": "caab93a24a4b004bc88c309f6881adb44e5cfa9e42e00bbd69d843b5090015f9"
+        },
+        "arm64": {
+            "url": "https://github.com/sebastienrousseau/askiso/releases/download/v0.0.6/askiso_0.0.6_windows_arm64.zip",
+            "hash": "dbcbc8542711586b9e315dc75877316c22c1dd13aecba092729d6222b82f81bb"
+        }
+    },
+    "bin": ["askiso.exe", "askiso-mcp.exe", "askiso-lsp.exe", "askiso-server.exe"],
+    "checkver": "github",
+    "autoupdate": {
+        "architecture": {
+            "64bit": {"url": "https://github.com/sebastienrousseau/askiso/releases/download/v$version/askiso_$version_windows_amd64.zip"},
+            "arm64": {"url": "https://github.com/sebastienrousseau/askiso/releases/download/v$version/askiso_$version_windows_arm64.zip"}
+        },
+        "hash": {"url": "$baseurl/checksums.txt"}
+    }
+}

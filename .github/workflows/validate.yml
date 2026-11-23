@@ -1,0 +1,59 @@
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
+# SPDX-License-Identifier: MIT OR Apache-2.0
+name: validate
+
+# Installs every manifest a pull request changes with Scoop itself, on Windows,
+# so a wrong hash, URL or bin entry fails here instead of on a user's machine.
+on:
+  pull_request:
+    paths:
+      - "bucket/**"
+      - ".github/workflows/validate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scoop:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Scoop
+        shell: pwsh
+        run: |
+          Invoke-RestMethod -Uri https://get.scoop.sh -OutFile install.ps1
+          .\install.ps1 -RunAsAdmin
+          Join-Path $HOME 'scoop\shims' | Out-File -Append -Encoding utf8 $Env:GITHUB_PATH
+
+      - name: Install the changed manifests
+        shell: pwsh
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if ($Env:BASE_SHA) {
+            $changed = git diff --name-only $Env:BASE_SHA HEAD -- bucket
+          } else {
+            $changed = git ls-files bucket
+          }
+          foreach ($m in $changed | Where-Object { $_ -like '*.json' -and (Test-Path $_) }) {
+            Write-Host "== $m"
+            # A bare bucket/x.json reads as <bucket>/<app>; a full path is a
+            # manifest file.
+            scoop install (Resolve-Path $m).Path
+            if ($LASTEXITCODE -ne 0) { throw "scoop install $m failed" }
+            $name = [IO.Path]::GetFileNameWithoutExtension($m)
+            if ($name -eq 'askiso') {
+              $want = (Get-Content $m -Raw | ConvertFrom-Json).version
+              foreach ($b in 'askiso-server', 'askiso-mcp', 'askiso-lsp') {
+                $got = & $b -version
+                if ($got -ne "$b $want") { throw "$b reported '$got', want '$b $want'" }
+                Write-Host "ok $got"
+              }
+            }
+            scoop uninstall $name
+          }
